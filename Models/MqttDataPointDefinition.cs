@@ -6,13 +6,13 @@ namespace MqttUaBridge.Models
     public class MqttDataPointDefinition
     {
         [JsonPropertyName("id")]
-        public string Id { get; set; } = string.Empty; [cite_start]// ID de liaison [cite: 10]
+        public string Id { get; set; } = string.Empty; // ID de liaison
 
         [JsonPropertyName("name")]
-        public string Name { get; set; } = string.Empty; [cite_start]// Nom hiérarchique [cite: 14]
+        public string Name { get; set; } = string.Empty; // Nom hiérarchique
 
         [JsonPropertyName("dataType")]
-        public string DataType { get; set; } = string.Empty; [cite_start]// Type de donnée (ex: UDInt, Real) [cite: 9, 27]
+        public string DataType { get; set; } = string.Empty; // Type de donnée (ex: UDInt, Real)
         
         // Les autres propriétés sont omises pour la concision du modèle
     }

@@ -16,8 +16,6 @@ namespace MqttUaBridge.Ua
             _settings = settings;
         }
 
-        // Méthode pour initialiser l'espace d'adressage
-        protected override MasterNodeManager Create          
         // Crée l'objet MasterNodeManager qui gère tous les NodeManagers.
         protected override MasterNodeManager CreateMasterNodeManager(IServerInternal server, ApplicationConfiguration configuration)
         {

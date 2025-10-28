@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Opc.Ua;
 using Opc.Ua.Configuration;
 using MqttUaBridge.Configuration;
+using Microsoft.Extensions.Logging;
 using MqttUaBridge.Ua;
 using System.Security.Cryptography.X509Certificates;
 

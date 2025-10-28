@@ -1,6 +1,8 @@
 using Opc.Ua;
 using Opc.Ua.Server;
 using MqttUaBridge.Configuration;
+using System.Collections.Generic; // Requis pour IDictionary
+using Microsoft.Extensions.Options; // Requis pour Options.Create
 
 namespace MqttUaBridge.Ua
 {
@@ -20,12 +22,17 @@ namespace MqttUaBridge.Ua
         {
             _settings = settings;
             // Instancier le ModelBuilder avec les paramètres de configuration
-            // Note: Nous ne pouvons pas utiliser DI ici directement, donc nous injectons le service plus tard.
-            _modelBuilder = new MqttUaModelBuilder(Options.Create(settings)); 
+            _modelBuilder = new MqttUaModelBuilder(Options.Create(settings));
         }
 
-        protected override void PopulateNamespace(ISystemContext context)
+        /// <summary>
+        /// Surcharge correcte pour initialiser l'espace d'adressage au démarrage du serveur.
+        /// </summary>
+        public override void CreateAddressSpace(IDictionary<NodeId, IList<IReference>> externalReferences)
         {
+            // Appeler la méthode de base en premier
+            base.CreateAddressSpace(externalReferences);
+            
             lock (_lock)
             {
                 // La méthode Build() sera appelée plus tard par le service MQTT une fois la structure reçue.
@@ -42,11 +49,13 @@ namespace MqttUaBridge.Ua
                     TypeDefinitionId = ObjectTypeIds.FolderType
                 };
 
-                // Ajout à l'espace d'adressage
+                // Ajout à l'espace d'adressage (AddRoot est une méthode protégée de NodeManagerBase)
                 AddRoot(bridgeRoot);
                 
                 // On notifie l'OPC UA Server pour que notre nœud racine soit visible.
-                bridgeRoot.ClearChangeMasks(context, true);
+                // Nous utilisons 'SystemContext' (propriété de la classe de base) 
+                // car 'context' n'est pas passé en paramètre ici.
+                bridgeRoot.ClearChangeMasks(SystemContext, true);
             }
         }
     }

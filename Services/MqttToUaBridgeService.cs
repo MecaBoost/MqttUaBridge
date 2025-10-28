@@ -8,6 +8,7 @@ using MqttUaBridge.Ua;
 using Opc.Ua;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 using System.Globalization;
 
 namespace MqttUaBridge.Services
