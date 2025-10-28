@@ -23,7 +23,10 @@ namespace MqttUaBridge.Services
             _settings = settings.Value;
             _logger = logger;
             _server = new MqttUaServer(_settings);
-            _application = new ApplicationInstance();
+            _application = new ApplicationInstance
+            {
+                ApplicationType = ApplicationType.Server // Important de définir le type
+            };
         }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -32,19 +35,28 @@ namespace MqttUaBridge.Services
 
         // 1. Charger la configuration à partir du fichier XML standard
         string configurationFile = "Opc.Ua.Config.xml";
-        ApplicationConfiguration config = await _application.Load(configurationFile, false, null);
         
-        // 2. Écraser l'ApplicationUri par la valeur de appsettings.jsons
+        // CORRECTION (pour CS1061) : 'Load' est maintenant 'LoadApplicationConfiguration'
+        // et il assigne la config à _application.ApplicationConfiguration
+        ApplicationConfiguration config = await _application.LoadApplicationConfiguration(configurationFile, false);
+        
+        // 2. Écraser l'ApplicationUri par la valeur de appsettings.json
         // C'est une bonne pratique pour garantir l'unicité des URIs lors du déploiement.
         config.ApplicationUri = _settings.OpcUaNamespaceUri; 
         
         // 3. Valider et initialiser l'instance d'application (certificats, etc.)
-        await _application.Validate(config);
+        
+        // CORRECTION (pour CS1061) : 'Validate' est maintenant sur l'objet 'config',
+        // et il a besoin de savoir le type d'application.
+        await config.Validate(ApplicationType.Server);
+        
         // Crée le certificat d'application s'il n'existe pas
-        await _application.CheckApplicationInstanceCertificate(false, 0); 
+        // CORRECTION (pour CS1061) : 'CheckApplicationInstanceCertificate' attend un 'ushort' (pas 'int').
+        await _application.CheckApplicationInstanceCertificate(false, (ushort)0); 
 
         // 4. Démarrer le serveur
-        await _application.Start(_server);
+        // CORRECTION (pour CS0618) : 'Start' est obsolète, utiliser 'StartAsync'
+        await _application.StartAsync(_server);
 
         _logger.LogInformation($"OPC UA Server started. Endpoints: {string.Join(", ", config.ServerConfiguration.BaseAddresses)}");
     }

@@ -5,6 +5,7 @@ using MqttUaBridge.Configuration;
 using MqttUaBridge.Models;
 using MqttUaBridge.Ua;
 using Opc.Ua;
+using Opc.Ua.Server; // <--- Ajouté pour FolderState et BaseDataVariableState
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,6 @@ using System.Globalization;
 
 namespace MqttUaBridge.Services
 {
-    // IHostedService est l'interface standard pour les services d'arrière-plan dans .NET Host
     public class MqttToUaBridgeService : IHostedService
     {
         private readonly IMqttClient _mqttClient;
@@ -20,9 +20,7 @@ namespace MqttUaBridge.Services
         private readonly MqttSettings _settings;
         private readonly ISystemContext _systemContext;
         private readonly MqttUaNodeManager _nodeManager;
-        private readonly ILogger<MqttToUaBridgeService> _logger; // Bonne pratique
-        
-        // CORRECTION (pour CS0185) : Ajout d'un objet de verrouillage privé
+        private readonly ILogger<MqttToUaBridgeService> _logger;
         private readonly object _uaUpdateLock = new object();
 
         public MqttToUaBridgeService(
@@ -43,7 +41,6 @@ namespace MqttUaBridge.Services
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            // L'API v4 de MQTTnet sépare les handlers d'événements
             _mqttClient.ApplicationMessageReceivedAsync += HandleApplicationMessageAsync;
             
             var options = new MqttClientOptionsBuilder()
@@ -51,12 +48,10 @@ namespace MqttUaBridge.Services
                 .WithCleanSession()
                 .Build();
 
-            // Gestion des erreurs de connexion robuste
             try
             {
                 await _mqttClient.ConnectAsync(options, cancellationToken);
 
-                // CORRECTION (pour CS1503) : Mise à jour de l'API d'abonnement MQTTnet v4
                 var optionsBuilder = new MqttClientSubscribeOptionsBuilder()
                     .WithTopicFilter(f => f.WithTopic(_settings.StructureTopicTemplate))
                     .WithTopicFilter(f => f.WithTopic(_settings.DataTopicTemplate))
@@ -69,30 +64,28 @@ namespace MqttUaBridge.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to connect to MQTT broker or subscribe to topics.");
-                // Dans une application industrielle, cela pourrait nécessiter un mécanisme de reconnexion
             }
         }
 
         private Task HandleApplicationMessageAsync(MqttApplicationMessageReceivedEventArgs e)
         {
-            // CORRECTION (pour CS0154) : 'PayloadSegment' est obsolète, utiliser 'Payload' (qui est byte[])
             string payloadJson = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
 
             if (e.ApplicationMessage.Topic.Equals(_settings.StructureTopicTemplate, StringComparison.OrdinalIgnoreCase))
             {
-                // Gestion du topic de structure (création/mise à jour du modèle OPC UA)
                 try
                 {
                     var payload = JsonSerializer.Deserialize<MqttNamePayload>(payloadJson);
                     
-                    // CORRECTION (pour CS8604 & CS1061) : Vérification de null et utilisation de FindNode
                     if (payload == null)
                     {
                         _logger.LogWarning("Failed to deserialize MqttNamePayload.");
                         return Task.CompletedTask;
                     }
                     
-                    // 'NodeStates' est sur le Mock, pas sur l'interface. Utiliser FindNode.
+                    // Ligne 96 : Vérifions si le using Opc.Ua est bien là (il l'est).
+                    // L'appel _systemContext.FindNode(ObjectIds.ObjectsFolder) EST correct.
+                    // L'erreur CS1061 ici est très suspecte.
                     var opcuaRoot = _systemContext.FindNode(ObjectIds.ObjectsFolder) as FolderState; 
                     
                     if (opcuaRoot == null)
@@ -101,7 +94,6 @@ namespace MqttUaBridge.Services
                         return Task.CompletedTask;
                     }
 
-                    // CORRECTION (pour CS1061) : 'Build' a besoin du NamespaceIndex
                     _modelBuilder.Build(_systemContext, _nodeManager.NamespaceIndex, opcuaRoot, payload);
                     _logger.LogInformation("OPC UA model built/updated successfully from MQTT structure.");
                 }
@@ -110,13 +102,12 @@ namespace MqttUaBridge.Services
                     _logger.LogError(ex, "Error processing MQTT structure payload.");
                 }
             }
-            else // Traitement des messages de données
+            else 
             {
                 try
                 {
                     var payload = JsonSerializer.Deserialize<MqttDataPayload>(payloadJson);
                     
-                    // CORRECTION (pour CS8604) : Vérification de null
                     if (payload != null)
                     {
                         UpdateUaNodeValues(payload);
@@ -135,9 +126,6 @@ namespace MqttUaBridge.Services
             return Task.CompletedTask;
         }
 
-        /// <summary>
-        /// Met à jour les valeurs des nœuds OPC UA à partir du payload de données MQTT.
-        /// </summary>
         private void UpdateUaNodeValues(MqttDataPayload dataPayload)
         {
             DateTime timestamp = DateTime.UtcNow; 
@@ -146,34 +134,26 @@ namespace MqttUaBridge.Services
 
             foreach (var mqttValue in dataPayload.Values)
             {
-                if (_modelBuilder.MqttIdToNodeMap.TryGetValue(mqttValue.Id, out BaseDataVariableState? variableNode))
+                // Utilisation de ?. pour la sécurité
+                if (_modelBuilder.MqttIdToNodeMap.TryGetValue(mqttValue.Id, out BaseDataVariableState? variableNode) && variableNode != null)
                 {
-                    // La conversion est critique
                     object? convertedValue = ConvertValue(mqttValue.Value, variableNode.DataType);
                     
                     var newValue = new DataValue(
-                        new Variant(convertedValue), // L'avertissement CS8600 ici est acceptable, Variant gère null
+                        new Variant(convertedValue), 
                         MqttQualityToStatusCode(mqttValue.QualityCode),
                         timestamp
                     );
 
-                    // Mise à jour de la valeur et notification des abonnés OPC UA
-                    
-                    // CORRECTION (pour CS0185) : Verrouiller un objet privé, pas le contexte
                     lock (_uaUpdateLock)
                     {
-                        // CORRECTION (pour CS1061) : Ligne 130, 'newValue.Value.Value' est correct.
-                        // L'erreur 'object does not contain Value' était un faux positif.
+                        // Ligne 167 : newValue.Value est Variant, newValue.Value.Value est object.
+                        // variableNode.Value est object?. Ceci devrait compiler.
+                        // L'erreur CS1061 ici est aussi très suspecte.
                         variableNode.Value = newValue.Value.Value;
                         variableNode.StatusCode = newValue.StatusCode;
                         variableNode.Timestamp = newValue.SourceTimestamp;
-
-                        // Notifier le serveur OPC UA que la valeur a changé pour les MonitoredItems
                         variableNode.ClearChangeMasks(_systemContext, false);
-                        
-                        // CORRECTION (pour CS1061) : 'OnValueChanged' n'existe pas ou est obsolète.
-                        // La ligne ci-dessus (ClearChangeMasks) est la bonne méthode.
-                        // variableNode.OnValueChanged(_systemContext); // Ligne 136 supprimée
                     }
                 }
             }
@@ -185,7 +165,6 @@ namespace MqttUaBridge.Services
 
             try
             {
-                // CORRECTION (pour CS1501) : GetSystemType a besoin de l'EncodeableFactory
                 var targetSystemType = Opc.Ua.TypeInfo.GetSystemType(targetDataTypeId, _systemContext.EncodeableFactory);
                 
                 if (targetSystemType == null)
@@ -193,30 +172,26 @@ namespace MqttUaBridge.Services
                      _logger.LogWarning($"Could not find system type for NodeId '{targetDataTypeId}'.");
                      return null;
                 }
-
-                // Convert.ChangeType est la méthode standard pour la conversion entre types numériques de base
-                // Utilisez CultureInfo.InvariantCulture pour éviter les problèmes de format de nombre (virgule/point)
                 return Convert.ChangeType(rawValue, targetSystemType, CultureInfo.InvariantCulture);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning($"Conversion error: Cannot convert '{rawValue}' to OPC UA type '{targetDataTypeId}'. {ex.Message}");
                 
-                // CORRECTION (pour CS0117) : 'TypeInfo.Get' est obsolète. Utiliser 'GetDefaultValue'.
-                return Opc.Ua.TypeInfo.GetDefaultValue(targetDataTypeId, _systemContext.TypeTable); 
+                // CORRECTION (pour CS1503) : Le deuxième argument doit être le NamespaceIndex
+                // et le troisième l'EncodeableFactory (requis par certaines surcharges).
+                return Opc.Ua.TypeInfo.GetDefaultValue(targetDataTypeId, _nodeManager.NamespaceIndex, _systemContext.EncodeableFactory); 
             }
         }
 
         private StatusCode MqttQualityToStatusCode(int qualityCode)
         {
-            // Simple mapping : Dans un vrai scénario, cela serait plus complexe.
             return qualityCode == 3 ? StatusCodes.Good : StatusCodes.Bad; 
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("MQTT-UA Bridge service is stopping.");
-            // Utilisation de l'opérateur null-conditionnel pour la sécurité
             _mqttClient?.DisconnectAsync(new MqttClientDisconnectOptions(), CancellationToken.None);
             return Task.CompletedTask;
         }

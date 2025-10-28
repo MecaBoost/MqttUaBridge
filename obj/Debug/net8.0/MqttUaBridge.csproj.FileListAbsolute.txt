@@ -3,3 +3,4 @@
 /home/jhoffmeyer/VsCode_Project/MqttUaBridge/obj/Debug/net8.0/MqttUaBridge.AssemblyInfoInputs.cache
 /home/jhoffmeyer/VsCode_Project/MqttUaBridge/obj/Debug/net8.0/MqttUaBridge.AssemblyInfo.cs
 /home/jhoffmeyer/VsCode_Project/MqttUaBridge/obj/Debug/net8.0/MqttUaBridge.csproj.CoreCompileInputs.cache
+/home/jhoffmeyer/VsCode_Project/MqttUaBridge/obj/Debug/net8.0/MqttUaBridge.sourcelink.json

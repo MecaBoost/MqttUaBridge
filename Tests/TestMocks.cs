@@ -28,23 +28,28 @@ namespace MqttUaBridge.Tests
             {
                 NodeId = ObjectIds.ObjectsFolder,
                 BrowseName = BrowseNames.ObjectsFolder,
-                DisplayName = new LocalizedText(BrowseNames.ObjectsFolder.Name)
+                // CORRECTION (pour CS1061) : BrowseNames.ObjectsFolder est un string, il n'a pas de propriété .Name
+                DisplayName = new LocalizedText(BrowseNames.ObjectsFolder)
             };
             NodeStates.Add(objectsFolder);
         }
 
         // --- Implémentation des membres requis par VOTRE ISystemContext ---
         
-        public object SystemHandle => null;
+        // CORRECTION (pour CS8603) : Le type de retour doit être nullable
+        public object? SystemHandle => null;
         public NodeId SessionId { get; set; }
-        public IUserIdentity UserIdentity { get; set; } = null;
+        // CORRECTION (pour CS8625) : Le type de retour doit être nullable
+        public IUserIdentity? UserIdentity { get; set; } = null;
         public IList<string> PreferredLocales { get; set; }
-        public string AuditEntryId { get; set; } = null;
+        // CORRECTION (pour CS8625) : Le type de retour doit être nullable
+        public string? AuditEntryId { get; set; } = null;
         public NamespaceTable NamespaceUris { get; }
         public StringTable ServerUris { get; }
         public ITypeTable TypeTable { get; } 
         public IEncodeableFactory EncodeableFactory { get; }
-        public INodeIdFactory NodeIdFactory { get; set; } = null;
+        // CORRECTION (pour CS8625) : Le type de retour doit être nullable
+        public INodeIdFactory? NodeIdFactory { get; set; } = null;
         public NodeStateFactory NodeStateFactory { get; set; } 
     }
 }
