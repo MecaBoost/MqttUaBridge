@@ -86,7 +86,13 @@ namespace MqttUaBridge.Services
                     // Ligne 96 : Vérifions si le using Opc.Ua est bien là (il l'est).
                     // L'appel _systemContext.FindNode(ObjectIds.ObjectsFolder) EST correct.
                     // L'erreur CS1061 ici est très suspecte.
-                    var opcuaRoot = _systemContext.FindNode(ObjectIds.ObjectsFolder) as FolderState; 
+                    var opcuaRoot = _nodeManager.SystemContext.NodeCache.Find(ObjectIds.ObjectsFolder) as FolderState;
+
+                    if (opcuaRoot == null) // Check remains the same
+                    {
+                        _logger.LogError("Could not find ObjectsFolder root node in OPC UA Server.");
+                        return Task.CompletedTask;
+                    } 
                     
                     if (opcuaRoot == null)
                     {
@@ -147,13 +153,25 @@ namespace MqttUaBridge.Services
 
                     lock (_uaUpdateLock)
                     {
-                        // Ligne 167 : newValue.Value est Variant, newValue.Value.Value est object.
-                        // variableNode.Value est object?. Ceci devrait compiler.
-                        // L'erreur CS1061 ici est aussi très suspecte.
-                        variableNode.Value = newValue.Value.Value;
-                        variableNode.StatusCode = newValue.StatusCode;
-                        variableNode.Timestamp = newValue.SourceTimestamp;
-                        variableNode.ClearChangeMasks(_systemContext, false);
+                        // Ensure newValue and its internal Variant are not null before accessing .Value
+                        if (newValue?.Value != null)
+                        {
+                            // CORRECTION: Access the Value property of the Variant
+                            variableNode.Value = newValue.Value.Value;
+                            variableNode.StatusCode = newValue.StatusCode;
+                            variableNode.Timestamp = newValue.SourceTimestamp; // Use SourceTimestamp
+
+                            variableNode.ClearChangeMasks(_systemContext, false);
+                        }
+                        else
+                        {
+                            // Handle case where conversion resulted in null or bad status already
+                            variableNode.Value = Opc.Ua.TypeInfo.GetDefaultValue(variableNode.DataType, _systemContext.TypeTable); // Set default on error?
+                            variableNode.StatusCode = newValue?.StatusCode ?? StatusCodes.BadNoData; // Use status if available, else BadNoData
+                            variableNode.Timestamp = newValue?.SourceTimestamp ?? timestamp; // Use timestamp if available
+                            variableNode.ClearChangeMasks(_systemContext, false);
+                            _logger.LogWarning($"Update failed for NodeId {variableNode.NodeId} (MQTT ID: {mqttValue.Id}), possibly due to conversion issue or null value.");
+                        }
                     }
                 }
             }
@@ -180,7 +198,7 @@ namespace MqttUaBridge.Services
                 
                 // CORRECTION (pour CS1503) : Le deuxième argument doit être le NamespaceIndex
                 // et le troisième l'EncodeableFactory (requis par certaines surcharges).
-                return Opc.Ua.TypeInfo.GetDefaultValue(targetDataTypeId, _nodeManager.NamespaceIndex, _systemContext.EncodeableFactory); 
+                return Opc.Ua.TypeInfo.GetDefaultValue(targetDataTypeId, _systemContext.TypeTable);
             }
         }
 

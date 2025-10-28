@@ -51,8 +51,8 @@ namespace MqttUaBridge.Services
         await config.Validate(ApplicationType.Server);
         
         // Crée le certificat d'application s'il n'existe pas
-        // CORRECTION (pour CS1061) : 'CheckApplicationInstanceCertificate' attend un 'ushort' (pas 'int').
-        await _application.CheckApplicationInstanceCertificate(false, (ushort)0); 
+        bool certificateOk = await _application.CheckApplicationInstanceCertificateAsync(false, 0);
+        _logger.LogInformation($"Application instance certificate check complete. Result: {certificateOk}");
 
         // 4. Démarrer le serveur
         // CORRECTION (pour CS0618) : 'Start' est obsolète, utiliser 'StartAsync'

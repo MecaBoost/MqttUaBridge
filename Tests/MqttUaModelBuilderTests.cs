@@ -21,15 +21,17 @@ namespace MqttUaBridge.Tests
         [SetUp]
         public void SetUp()
         {
-            var settings = Options.Create(new MqttSettings { 
-                RootNodeName = "MqttDataBridge" 
+            var settings = Options.Create(new MqttSettings {
+                RootNodeName = "MqttDataBridge",
+                OpcUaNamespaceUri = "urn:test:uri" // Ensure mock has necessary settings
             });
             _context = new MockSystemContext(settings.Value);
             _builder = new MqttUaModelBuilder(settings);
-            
-            // L'ObjectsFolder est la racine OPC UA standard
-            // CORRECTION (pour CS1061) : 'FindNode' n'existe pas, la méthode est 'Find'
-            _rootFolder = _context.NodeStates.Find(ObjectIds.ObjectsFolder) as FolderState ?? new FolderState(null);
+
+            // CORRECTION: Find the ObjectsFolder node directly from the mock's NodeStates collection
+            _rootFolder = _context.NodeStates.FirstOrDefault(n => n.NodeId == ObjectIds.ObjectsFolder) as FolderState ?? new FolderState(null);
+            // Ensure the ObjectsFolder was actually added in the MockSystemContext constructor
+            Assert.That(_rootFolder?.NodeId, Is.EqualTo(ObjectIds.ObjectsFolder), "MockSystemContext did not contain ObjectsFolder.");
         }
 
         [Test]
