@@ -5,7 +5,7 @@ using MqttUaBridge.Configuration;
 using MqttUaBridge.Models;
 using MqttUaBridge.Ua;
 using Opc.Ua;
-using Opc.Ua.Server; // Ajouté pour ServerSystemContext si nécessaire, bien que _systemContext soit ISystemContext
+using Opc.Ua.Server;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
@@ -71,17 +71,7 @@ namespace MqttUaBridge.Services
 
         private Task HandleApplicationMessageAsync(MqttApplicationMessageReceivedEventArgs e)
         {
-        byte[] payloadBytes;
-            // La propriété PayloadSegment (de type ReadOnlySequence<byte>?) peut être nulle
-            // ou sa séquence interne peut être vide. Convertir en tableau si des données existent.
-            if (e.ApplicationMessage.PayloadSegment.Length > 0)
-            {
-                payloadBytes = e.ApplicationMessage.PayloadSegment.ToArray();
-            }
-            else
-            {
-                payloadBytes = Array.Empty<byte>();
-            }
+            byte[] payloadBytes = e.ApplicationMessage.Payload ?? Array.Empty<byte>();
             string payloadJson = Encoding.UTF8.GetString(payloadBytes);
 
             if (e.ApplicationMessage.Topic.Equals(_settings.StructureTopicTemplate, StringComparison.OrdinalIgnoreCase))
