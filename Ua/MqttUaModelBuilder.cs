@@ -51,7 +51,9 @@ namespace MqttUaBridge.Ua
 
                 // Initialisation de la valeur
                 // CORRECTION (pour CS1503) : Le deuxième argument doit être le NamespaceIndex
-                variable.Value = Opc.Ua.TypeInfo.GetDefaultValue(variable.DataType, context.TypeTable);
+                variable.Value = Opc.Ua.TypeInfo.GetDefaultValue(variable.DataType,
+                                                                Opc.Ua.ValueRanks.Scalar, // C'est un int (-1)
+                                                                context.TypeTable);      // C'est ITypeTable
                 variable.StatusCode = StatusCodes.BadWaitingForInitialData;
                 variable.Timestamp = DateTime.UtcNow;
 

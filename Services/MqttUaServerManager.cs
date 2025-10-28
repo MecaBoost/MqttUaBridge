@@ -49,10 +49,6 @@ namespace MqttUaBridge.Services
         // CORRECTION (pour CS1061) : 'Validate' est maintenant sur l'objet 'config',
         // et il a besoin de savoir le type d'application.
         await config.Validate(ApplicationType.Server);
-        
-        // Crée le certificat d'application s'il n'existe pas
-        bool certificateOk = await _application.CheckApplicationInstanceCertificateAsync(false, 0);
-        _logger.LogInformation($"Application instance certificate check complete. Result: {certificateOk}");
 
         // 4. Démarrer le serveur
         // CORRECTION (pour CS0618) : 'Start' est obsolète, utiliser 'StartAsync'
