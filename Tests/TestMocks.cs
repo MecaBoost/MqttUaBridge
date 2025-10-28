@@ -1,6 +1,6 @@
 using MqttUaBridge.Configuration;
 using Opc.Ua;
-using Opc.Ua.Server; // <-- Le using est bien là
+using Opc.Ua.Server;
 using System.Collections.Generic; 
 
 namespace MqttUaBridge.Tests
@@ -33,11 +33,8 @@ namespace MqttUaBridge.Tests
             NodeStates.Add(objectsFolder);
         }
 
-        public NodeState FindNode(ExpandedNodeId nodeId) => NodeStates.FindNode(nodeId);
-        public NodeState FindNode(NodeId nodeId) => NodeStates.FindNode(nodeId);
-        public object DiagnosticsLock => new object();
-        public DiagnosticsNodeState DiagnosticsNode => null; 
-        public uint SystemContextId => 0;
+        // --- Implémentation des membres requis par VOTRE ISystemContext ---
+        
         public object SystemHandle => null;
         public NodeId SessionId { get; set; }
         public IUserIdentity UserIdentity { get; set; } = null;
@@ -48,6 +45,6 @@ namespace MqttUaBridge.Tests
         public ITypeTable TypeTable { get; } 
         public IEncodeableFactory EncodeableFactory { get; }
         public INodeIdFactory NodeIdFactory { get; set; } = null;
-        public NodeStateFactory NodeStateFactory { get; set; }
+        public NodeStateFactory NodeStateFactory { get; set; } 
     }
 }

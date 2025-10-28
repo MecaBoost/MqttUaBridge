@@ -49,8 +49,12 @@ namespace MqttUaBridge.Ua
                     TypeDefinitionId = ObjectTypeIds.FolderType
                 };
 
-                // Ajout à l'espace d'adressage (AddRoot est une méthode protégée de NodeManagerBase)
-                AddRoot(bridgeRoot);
+                // CORRECTION (pour CS0103) : 'AddRoot' est obsolète/n'existe pas.
+                // 1. Lier le nœud racine au dossier ObjectsFolder standard
+                AddReference(ObjectIds.ObjectsFolder, ReferenceTypeIds.Organizes, false, bridgeRoot.NodeId, false);
+                
+                // 2. Ajouter le nœud à la collection du manager pour qu'il soit géré
+                AddPredefinedNode(SystemContext, bridgeRoot);
                 
                 // On notifie l'OPC UA Server pour que notre nœud racine soit visible.
                 // Nous utilisons 'SystemContext' (propriété de la classe de base) 

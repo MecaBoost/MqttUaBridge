@@ -14,11 +14,11 @@
     <PackageReference Include="MQTTnet" Version="5.0.1.1416" />
 
     <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua" Version="1.5.377.21" />
-    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Server" Version="1.5.377.21" />
 
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <PackageReference Include="NUnit" Version="4.1.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Server" Version="1.5.377.21" />
   </ItemGroup>
 
   <ItemGroup>
