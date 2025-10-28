@@ -1,0 +1,17 @@
+{
+  "MqttSettings": {
+    "BrokerHost": "ie-databus",
+    "BrokerPort": 1883,
+    "StructureTopicTemplate": "ie/m/j/simatic/v1/s7c1/dp", 
+    "DataTopicTemplate": "ie/d/j/simatic/v1/s7c1/dp/r/+/default",
+    "OpcUaNamespaceUri": "urn:MyMqttToUaBridge:IndustrialData",
+    "RootNodeName": "MqttDataBridge"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "System": "Warning",
+      "Microsoft": "Warning"
+    }
+  }
+}

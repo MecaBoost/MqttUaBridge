@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                          xmlns:ua="http://opcfoundation.org/UA/2008/02/Types.xsd" 
+                          xmlns="http://opcfoundation.org/UA/SDK/Configuration.xsd">
+  
+  <ApplicationName>MqttUaBridgeServer</ApplicationName>
+  
+  <ApplicationUri>urn:localhost:MqttUaBridgeServer</ApplicationUri> 
+  
+  <ProductUri>https://github.com/opcfoundation/UA-.NETStandard</ProductUri>
+  <ApplicationType>Server</ApplicationType>
+
+  <SecurityConfiguration>
+    <ApplicationCertificate>
+      <StoreType>Directory</StoreType>
+      <StorePath>pki/own</StorePath>
+      <SubjectName>CN=MqttUaBridgeServer, C=FR, DC=localhost</SubjectName>
+    </ApplicationCertificate>
+    
+    <TrustedPeerCertificates>
+      <StoreType>Directory</StoreType>
+      <StorePath>pki/trusted</StorePath>
+    </TrustedPeerCertificates>
+    
+    <RejectedCertificateStore>
+      <StoreType>Directory</StoreType>
+      <StorePath>pki/rejected</StorePath>
+    </RejectedCertificateStore>
+    
+    <AutoAcceptUntrustedCertificates>true</AutoAcceptUntrustedCertificates>
+  </SecurityConfiguration>
+  
+  <ServerConfiguration>
+    <BaseAddresses>
+      <ua:String>opc.tcp://localhost:62541/MqttUaBridgeServer</ua:String>
+    </BaseAddresses>
+    <SecurityPolicies>
+      <ServerSecurityPolicy>
+        <SecurityMode>None</SecurityMode>
+        <SecurityPolicyUri>http://opcfoundation.org/UA/SecurityPolicy#None</SecurityPolicyUri>
+      </ServerSecurityPolicy>
+    </SecurityPolicies>
+  </ServerConfiguration>
+
+  <TraceConfiguration>
+    <OutputFilePath>./Logs/OpcUaLog.txt</OutputFilePath>
+    <DeleteOnLoad>true</DeleteOnLoad>
+    <TraceMasks>1023</TraceMasks>
+  </TraceConfiguration>
+  
+</ApplicationConfiguration>
