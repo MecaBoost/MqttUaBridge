@@ -45,7 +45,7 @@
           "dependencies": {
             "MQTTnet": {
               "target": "Package",
-              "version": "[4.3.3.905, )"
+              "version": "[5.0.1.1416, )"
             },
             "Microsoft.Extensions.Configuration.Json": {
               "target": "Package",
@@ -68,6 +68,10 @@
               "version": "[4.5.0, )"
             },
             "OPCFoundation.NetStandard.Opc.Ua": {
+              "target": "Package",
+              "version": "[1.5.377.21, )"
+            },
+            "OPCFoundation.NetStandard.Opc.Ua.Server": {
               "target": "Package",
               "version": "[1.5.377.21, )"
             }

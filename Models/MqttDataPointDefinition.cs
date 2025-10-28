@@ -17,7 +17,7 @@ namespace MqttUaBridge.Models
         // Les autres propriétés sont omises pour la concision du modèle
     }
 
-    [cite_start]// Modèles conteneurs pour la désérialisation de Mqtt_Name [cite: 8]
+    // Modèles conteneurs pour la désérialisation de Mqtt_Name
     public class MqttDataPoint
     {
         [JsonPropertyName("dataPointDefinitions")]

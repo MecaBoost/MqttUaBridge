@@ -1,23 +1,29 @@
 using MqttUaBridge.Configuration;
 using Opc.Ua;
+using Opc.Ua.Server; // <-- Le using est bien là
+using System.Collections.Generic; 
 
 namespace MqttUaBridge.Tests
 {
-    // Un Mock de l'ISystemContext est ESSENTIEL pour pouvoir créer des nœuds dans l'espace d'adressage
     public class MockSystemContext : ISystemContext
     {
         private readonly MqttSettings _settings;
         public ushort NamespaceIndex { get; }
+        public NodeStateCollection NodeStates { get; } = new NodeStateCollection();
 
-        public NodeStateCollection NodeStates { get; } = new NodeStateCollection(); 
-        
         public MockSystemContext(MqttSettings settings)
         {
             _settings = settings;
-            // Dans un serveur réel, un Namespace Index est attribué. Nous utilisons '1' pour le test.
             NamespaceIndex = 1; 
 
-            // Simuler l'objet racine standard 'ObjectsFolder' (NodeId i=85)
+            NamespaceUris = new NamespaceTable();
+            ServerUris = new StringTable();
+            TypeTable = new TypeTable(NamespaceUris); 
+            PreferredLocales = new List<string> { "en-US" };
+            EncodeableFactory = Opc.Ua.EncodeableFactory.GlobalFactory;
+            SessionId = new NodeId("mock_session");
+            NodeStateFactory = new NodeStateFactory(); 
+
             var objectsFolder = new FolderState(null)
             {
                 NodeId = ObjectIds.ObjectsFolder,
@@ -27,15 +33,21 @@ namespace MqttUaBridge.Tests
             NodeStates.Add(objectsFolder);
         }
 
-        // Implémentation minimaliste des membres requis pour le bon fonctionnement des tests/bridge
         public NodeState FindNode(ExpandedNodeId nodeId) => NodeStates.FindNode(nodeId);
-        
-        // Les autres membres ISystemContext sont laissés comme des implémentations de base pour la concision
         public NodeState FindNode(NodeId nodeId) => NodeStates.FindNode(nodeId);
         public object DiagnosticsLock => new object();
-        public DiagnosticsNodeState DiagnosticsNode => null;
+        public DiagnosticsNodeState DiagnosticsNode => null; 
         public uint SystemContextId => 0;
         public object SystemHandle => null;
-        // ... (autres membres avec implémentations minimales)
+        public NodeId SessionId { get; set; }
+        public IUserIdentity UserIdentity { get; set; } = null;
+        public IList<string> PreferredLocales { get; set; }
+        public string AuditEntryId { get; set; } = null;
+        public NamespaceTable NamespaceUris { get; }
+        public StringTable ServerUris { get; }
+        public ITypeTable TypeTable { get; } 
+        public IEncodeableFactory EncodeableFactory { get; }
+        public INodeIdFactory NodeIdFactory { get; set; } = null;
+        public NodeStateFactory NodeStateFactory { get; set; }
     }
 }

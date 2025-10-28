@@ -5,7 +5,6 @@ using MqttUaBridge.Ua;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using MQTTnet.Client;
 using MQTTnet;
 using Opc.Ua.Server; 
 

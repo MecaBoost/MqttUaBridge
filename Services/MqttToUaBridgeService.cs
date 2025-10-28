@@ -1,7 +1,6 @@
 using System.Text;
 using System.Text.Json;
 using MQTTnet;
-using MQTTnet.Client;
 using MqttUaBridge.Configuration;
 using MqttUaBridge.Models;
 using MqttUaBridge.Ua;

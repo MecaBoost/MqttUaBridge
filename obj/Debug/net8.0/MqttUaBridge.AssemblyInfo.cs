@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MqttUaBridge")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6e9001dcacd66973af92ad8dbc2c975659271a36")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+469376edf1649c0b5f55a0b5d5d56bab5b62894d")]
 [assembly: System.Reflection.AssemblyProductAttribute("MqttUaBridge")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MqttUaBridge")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
